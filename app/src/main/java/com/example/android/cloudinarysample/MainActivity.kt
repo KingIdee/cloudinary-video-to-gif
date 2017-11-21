@@ -1,74 +1,72 @@
 package com.example.android.cloudinarysample
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import com.cloudinary.Cloudinary
-import com.cloudinary.Configuration
-import com.cloudinary.utils.ObjectUtils
-import android.provider.MediaStore
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
+import android.os.Bundle
+import android.provider.MediaStore
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.provider.OpenableColumns
+import android.widget.Toast
+import com.cloudinary.Cloudinary
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
 import java.io.File
-import java.io.FileInputStream
-import java.util.concurrent.Executors
 
 
 class MainActivity : AppCompatActivity() {
 
-    private val SELECT_VIDEO:Int = 100
+    private val SELECT_VIDEO: Int = 100
+    lateinit var TAG:String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        this.TAG = localClassName
         openMediaChooser()
-
     }
 
-    fun openMediaChooser(){
+    fun openMediaChooser() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(intent, SELECT_VIDEO)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
-        if (requestCode==SELECT_VIDEO && resultCode==Activity.RESULT_OK){
-            val config = HashMap<String,Any?>()
-            config.put("cloud_name","CLOUDINARY_NAME")
-            val cloudinary = Cloudinary(config)
+        if (requestCode == SELECT_VIDEO && resultCode == Activity.RESULT_OK) {
+            MediaManager.get()
+                    .upload(data!!.data)
+                    .unsigned("YOUR_PRESET")
+                    .option("resource_type", "video")
+                    .callback(object : UploadCallback {
+                        override fun onStart(requestId: String) {
+                            Log.d("TAG", "onStart")
+                        }
 
-            val myFile = File(data!!.data.toString())
-            Log.d("TAG", myFile.toString())
-            Log.d("TAG", getRealPathFromURI(this@MainActivity,data.data))
-            Executors.newFixedThreadPool(3).execute({
-                cloudinary.uploader().unsignedUpload(getRealPathFromURI(this@MainActivity,data.data), "ddsfdcvz",ObjectUtils.asMap("resource_type", "video"))
-            })
+                        override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
+                            Log.d("TAG", bytes.toString() + "/" + totalBytes.toString())
+                        }
+
+                        override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                            Toast.makeText(this@MainActivity, "success", Toast.LENGTH_LONG).show()
+                            Log.d("TAG", "onSuccess")
+                            Log.d("TAG", resultData.toString())
+                        }
+
+                        override fun onError(requestId: String, error: ErrorInfo) {
+                            Log.d("TAG", "onError")
+                        }
+
+                        override fun onReschedule(requestId: String, error: ErrorInfo) {
+                            Log.d("TAG", "onReschedule")
+                        }
+                    }).dispatch()
+
         }
 
     }
-
-    fun getRealPathFromURI(context: Context, contentUri: Uri): String {
-        var cursor: Cursor? = null
-        try {
-            val proj = arrayOf(MediaStore.Images.Media.DATA)
-            cursor = context.getContentResolver().query(contentUri, proj, null, null, null)
-            val column_index = cursor!!.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-            cursor.moveToFirst()
-            return cursor.getString(column_index)
-        } finally {
-            if (cursor != null) {
-                cursor.close()
-            }
-        }
-    }
-
-
-
-
 
 }
