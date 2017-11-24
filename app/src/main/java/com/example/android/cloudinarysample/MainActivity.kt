@@ -39,7 +39,6 @@ class MainActivity : AppCompatActivity() {
                 requestPermission()
             }
         }
-        Log.d(TAG,getRootDirPath())
     }
 
     private fun requestPermission() {
