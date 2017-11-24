@@ -31,14 +31,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         this.TAG = localClassName
-        /*button_upload_video.setOnClickListener {
+        button_upload_video.setOnClickListener {
             if (checkStoragePermission()) {
                 openMediaChooser()
             } else {
                 requestPermission()
             }
-        }*/
-        Log.d(TAG,getRootDirPath())
+        }
+        
     }
 
     private fun requestPermission() {
