@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.widget.Toast
+import com.cloudinary.Transformation
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
@@ -31,13 +32,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         this.TAG = localClassName
-        /*button_upload_video.setOnClickListener {
+        button_upload_video.setOnClickListener {
             if (checkStoragePermission()) {
                 openMediaChooser()
             } else {
                 requestPermission()
             }
-        }*/
+        }
         Log.d(TAG,getRootDirPath())
     }
 
@@ -74,13 +75,16 @@ class MainActivity : AppCompatActivity() {
                             Log.d(TAG, bytes.toString() + "-" + totalBytes.toString())
                         }
 
+                        @Suppress("INACCESSIBLE_TYPE")
                         override fun onSuccess(requestId: String, resultData: Map<*, *>) {
                             val publicId:String = resultData["public_id"] as String
                             Toast.makeText(this@MainActivity, "Upload successful", Toast.LENGTH_LONG).show()
                             Log.d(TAG, resultData.toString())
+
                             val gifUrl: String = MediaManager.get()
                                     .url()
                                     .resourceType("video")
+                                    .transformation(Transformation<Transformation<out Transformation<*>>?>().videoSampling("12")!!.width("174").height("232").effect("loop:2"))
                                     .generate("$publicId.gif")
                             downloadGIF(gifUrl,"$publicId.gif")
                         }
